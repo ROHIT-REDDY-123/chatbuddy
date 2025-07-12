@@ -9,10 +9,4 @@ ChatBuddy is a beginner-friendly chatbot built using Python and Streamlit. It us
 - 🔁 Handles greetings, common phrases, help queries, and unknown inputs
 - ⚡ Fast and lightweight — runs anywhere
 
-## 🖥️ Demo
-
-▶️ **Live App**: [Click here to try ChatBuddy](https://chatbudd-te96whoyntfmjjgkzu6eyi.streamlit.app/)  
-💻 **Source Code**: [GitHub Repository](https://github.com/ROHIT-REDDY-123/chatbuddy)
-
-## 📂 Folder Structure
 
