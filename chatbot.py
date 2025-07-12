@@ -1,6 +1,19 @@
 # Step 0: Install required packages (if you haven't already; run these in your terminal or Colab cell)
 # !pip install nltk
 
+# 📦 Safe NLTK setup for normal Python scripts
+try:
+    import nltk
+    nltk.data.find("tokenizers/punkt")
+except:
+    import os
+    os.system("pip install nltk")
+    import nltk
+    nltk.download("punkt")
+    nltk.download("stopwords")
+    nltk.download("wordnet")
+
+
 import string
 import random
 import nltk
