@@ -1,78 +1,103 @@
-# 📌 Install dependencies (run this in terminal if not done yet):
-# pip install streamlit nltk
-
 import streamlit as st
 import nltk
 import string
 import random
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
-from difflib import get_close_matches
 
-# ✅ First-time setup for NLTK
+# Download NLTK resources (only the first time)
 nltk.download('punkt')
 nltk.download('stopwords')
 nltk.download('wordnet')
 
-# ✨ NLP tools
+# Preprocessing setup
 stop_words = set(stopwords.words("english"))
 lemmatizer = WordNetLemmatizer()
 
-# 🔁 Preprocess function
 def preprocess(text):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
     tokens = word_tokenize(text)
-    tokens = [lemmatizer.lemmatize(w) for w in tokens if w not in stop_words]
+    tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words]
     return " ".join(tokens)
 
-# 🧠 Intent and responses dictionary
-responses_dict = {
+# Intents and responses
+intents = {
     "greeting": {
         "patterns": ["hello", "hi", "hey", "good morning", "good evening"],
-        "responses": ["Hello! How can I help you today?", "Hi there! What can I do for you?"]
+        "responses": ["Hi! How can I help you?", "Hello! What can I do for you?"]
     },
-    "how_are_you": {
-        "patterns": ["how are you", "how are you doing", "how is it going"],
-        "responses": ["I'm just a bot, but I'm doing great! How about you?"]
+    "bye": {
+        "patterns": ["bye", "goodbye", "exit", "see you"],
+        "responses": ["Goodbye!", "See you later!", "Take care!"]
     },
-    "bot_name": {
+    "name": {
         "patterns": ["your name", "who are you", "what is your name"],
-        "responses": ["I'm ChatBuddy, your upgraded chatbot with NLP!"]
+        "responses": ["I'm ChatBuddy, your friendly chatbot!"]
     },
-    "goodbye": {
-        "patterns": ["bye", "goodbye", "see you", "exit"],
-        "responses": ["Goodbye! Have a nice day!", "See you later!"]
+    "thanks": {
+        "patterns": ["thanks", "thank you", "thx"],
+        "responses": ["You're welcome!", "Anytime!", "Glad to help!"]
     },
-    "help": {
-        "patterns": ["help", "assist me", "what can you do"],
-        "responses": ["You can greet me, ask my name, or say bye to exit."]
+    "unknown": {
+        "patterns": [],
+        "responses": ["Sorry, I didn't understand that. Can you rephrase?"]
     }
 }
 
-# 🎯 Match user input to intent
-def get_intent(user_input):
-    cleaned_input = preprocess(user_input)
-    for intent, data in responses_dict.items():
-        for pattern in data["patterns"]:
-            cleaned_pattern = preprocess(pattern)
-            if get_close_matches(cleaned_input, [cleaned_pattern], n=1, cutoff=0.7):
-                return intent
-    return None
+# Vectorization setup
+intent_labels = []
+all_patterns = []
 
-# 💬 NLP-enhanced chatbot response
+for intent, data in intents.items():
+    for pattern in data["patterns"]:
+        all_patterns.append(preprocess(pattern))
+        intent_labels.append(intent)
+
+vectorizer = TfidfVectorizer()
+X = vectorizer.fit_transform(all_patterns)
+
+def get_intent(user_input):
+    cleaned = preprocess(user_input)
+    user_vec = vectorizer.transform([cleaned])
+    similarity = cosine_similarity(user_vec, X)
+    best_idx = similarity.argmax()
+    confidence = similarity[0][best_idx]
+
+    if confidence < 0.3:
+        return "unknown"
+    return intent_labels[best_idx]
+
 def chatbot_response(user_input):
     intent = get_intent(user_input)
-    if intent:
-        return random.choice(responses_dict[intent]["responses"])
-    return "Sorry, I didn't understand that. Can you rephrase?"
+    return random.choice(intents[intent]["responses"])
 
-# 🖼️ Streamlit App UI
-st.title("🤖 ChatBuddy – NLP-Enhanced Chatbot (Streamlit)")
+# -------------------------------
+# Streamlit UI
+# -------------------------------
+st.set_page_config(page_title="ChatBuddy", page_icon="🤖")
 
-user_input = st.text_input("You:", "")
+st.title("🤖 ChatBuddy")
+st.markdown("Ask me anything like greetings, my name, or say 'bye' to exit.")
 
-if user_input:
+# Store chat history in session state
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# Input form
+with st.form(key="chat_form"):
+    user_input = st.text_input("You:", "")
+    submit = st.form_submit_button("Send")
+
+# Display and process input
+if submit and user_input.strip() != "":
     response = chatbot_response(user_input)
-    st.text_area("ChatBuddy:", value=response, height=100)
+    st.session_state.messages.append(("You", user_input))
+    st.session_state.messages.append(("ChatBuddy", response))
+
+# Show conversation history
+for sender, msg in st.session_state.messages:
+    st.markdown(f"**{sender}:** {msg}")
