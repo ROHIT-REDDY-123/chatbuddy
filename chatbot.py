@@ -1,14 +1,15 @@
-import nltk
-import string
+# app.py
+
+import re
 import random
+import string
+import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-# Download required NLTK data
-nltk.download('punkt')
+# Download required resources (only needed in first run)
 nltk.download('stopwords')
 nltk.download('wordnet')
 
@@ -16,17 +17,14 @@ nltk.download('wordnet')
 stop_words = set(stopwords.words("english"))
 lemmatizer = WordNetLemmatizer()
 
-import re
-
 def preprocess(text):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
-    tokens = re.findall(r'\b\w+\b', text)  # Simple regex-based tokenization
+    tokens = re.findall(r'\b\w+\b', text)
     tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words]
     return " ".join(tokens)
 
-
-# Define chatbot intents
+# Intent database
 intents = {
     "greeting": {
         "patterns": ["hello", "hi", "hey", "good morning", "good evening"],
@@ -63,32 +61,13 @@ vectorizer = TfidfVectorizer()
 X = vectorizer.fit_transform(all_patterns)
 
 def get_intent(user_input):
-    """Predict the intent of the user's input using cosine similarity."""
     cleaned_input = preprocess(user_input)
     input_vec = vectorizer.transform([cleaned_input])
     similarities = cosine_similarity(input_vec, X)
     max_index = similarities.argmax()
     confidence = similarities[0][max_index]
-
-    if confidence < 0.3:
-        return "unknown"
-    return intent_labels[max_index]
+    return intent_labels[max_index] if confidence >= 0.3 else "unknown"
 
 def chatbot_response(user_input):
-    """Generate a chatbot response based on predicted intent."""
     intent = get_intent(user_input)
     return random.choice(intents[intent]["responses"])
-
-def chatbot():
-    """Main chat loop."""
-    print("🤖 ChatBuddy: Hello! Type 'bye' to exit.")
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() in ["bye", "exit"]:
-            print("🤖 ChatBuddy:", random.choice(intents["bye"]["responses"]))
-            break
-        response = chatbot_response(user_input)
-        print("🤖 ChatBuddy:", response)
-
-if __name__ == "__main__":
-    chatbot()
