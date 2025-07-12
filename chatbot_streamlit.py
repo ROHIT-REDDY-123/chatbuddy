@@ -1,24 +1,24 @@
 import streamlit as st
-from chatbot import chatbot_response
 
-st.set_page_config(page_title="ChatBuddy", page_icon="🤖")
-st.title("🤖 ChatBuddy - Rule-Based Chatbot")
-st.markdown("Type a message to start chatting with ChatBuddy!")
+def chatbot_response(user_input):
+    user_input = user_input.lower()
 
-# Initialize chat history
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+    if "hello" in user_input or "hi" in user_input:
+        return "Hello! How can I help you today?"
+    elif "how are you" in user_input:
+        return "I'm just a bot, but I'm doing great! How about you?"
+    elif "your name" in user_input:
+        return "I'm ChatBuddy, your simple chatbot!"
+    elif "bye" in user_input or "exit" in user_input:
+        return "Goodbye! Have a nice day!"
+    elif "help" in user_input:
+        return "You can ask me about greetings, my name, or say bye to exit."
+    else:
+        return "Sorry, I didn't understand that. Can you rephrase?"
 
-# Input form
-with st.form("chat_form", clear_on_submit=True):
-    user_input = st.text_input("You:", "")
-    submitted = st.form_submit_button("Send")
+st.title("🤖 ChatBuddy – Simple Rule-Based Chatbot")
+user_input = st.text_input("You:", "")
 
-if submitted and user_input.strip():
+if user_input:
     response = chatbot_response(user_input)
-    st.session_state.messages.append(("You", user_input))
-    st.session_state.messages.append(("ChatBuddy", response))
-
-# Show chat history
-for sender, message in st.session_state.messages:
-    st.markdown(f"**{sender}:** {message}")
+    st.text_area("ChatBuddy:", value=response, height=100)
