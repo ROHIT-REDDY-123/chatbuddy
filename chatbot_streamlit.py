@@ -17,12 +17,15 @@ nltk.download('wordnet')
 stop_words = set(stopwords.words("english"))
 lemmatizer = WordNetLemmatizer()
 
+import re
+
 def preprocess(text):
     text = text.lower()
     text = text.translate(str.maketrans('', '', string.punctuation))
-    tokens = word_tokenize(text)
+    tokens = re.findall(r'\b\w+\b', text)  # Simple regex-based tokenization
     tokens = [lemmatizer.lemmatize(word) for word in tokens if word not in stop_words]
     return " ".join(tokens)
+
 
 # Intents and responses
 intents = {
