@@ -1,5 +1,5 @@
 import streamlit as st
-from app import chatbot_response
+from chatbot import chatbot_response
 
 st.set_page_config(page_title="ChatBuddy", page_icon="🤖")
 st.title("🤖 ChatBuddy - Rule-Based Chatbot")
